@@ -96,6 +96,7 @@ func New(
 	// - set some defaults
 	if s.config.File != "" {
 		logp.Debug("sniffer", "Reading from file: %s", s.config.File)
+		fmt.Println("Reading from file", s.config.File)
 
 		if s.config.BpfFilter != "" {
 			logp.Warn("Packet filters are not applied to pcap files.")

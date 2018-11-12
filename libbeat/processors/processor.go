@@ -39,6 +39,7 @@ func New(config PluginConfig) (*Processors, error) {
 	procs := Processors{}
 
 	for _, processor := range config {
+		fmt.Println("########## processor ############", processor)
 
 		if len(processor) != 1 {
 			return nil, fmt.Errorf("each processor needs to have exactly one action, but found %d actions",

@@ -176,6 +176,7 @@ func (pb *packetbeat) setupFlows() error {
 	if err != nil {
 		return err
 	}
+	fmt.Println("Processors from PB.go", processors, err)
 
 	client, err := pb.pipeline.ConnectWith(beat.ClientConfig{
 		EventMetadata: config.Flows.EventMetadata,
@@ -185,6 +186,8 @@ func (pb *packetbeat) setupFlows() error {
 		return err
 	}
 
+	// till here, a flow is returned with count registers, flow meta table and flow worker
+	// (struct which is resposible for creating and publishing events)
 	pb.flows, err = flows.NewFlows(client.PublishAll, config.Flows)
 	if err != nil {
 		return err

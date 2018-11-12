@@ -18,6 +18,7 @@
 package decoder
 
 import (
+	"encoding/binary"
 	"fmt"
 
 	"github.com/elastic/beats/libbeat/logp"
@@ -60,6 +61,7 @@ type Decoder struct {
 	flows       *flows.Flows
 	statPackets *flows.Uint
 	statBytes   *flows.Uint
+	statRtt     *flows.Uint
 
 	// hold current flow ID
 	flowID              *flows.FlowID // buffer flowID among many calls
@@ -69,6 +71,7 @@ type Decoder struct {
 const (
 	netPacketsTotalCounter = "net_packets_total"
 	netBytesTotalCounter   = "net_bytes_total"
+	netRttTotalCounter     = "net_rtt_total"
 )
 
 // New creates and initializes a new packet decoder.
@@ -95,6 +98,10 @@ func New(
 			return nil, err
 		}
 		d.statBytes, err = f.NewUint(netBytesTotalCounter)
+		if err != nil {
+			return nil, err
+		}
+		d.statRtt, err = f.NewUint(netRttTotalCounter)
 		if err != nil {
 			return nil, err
 		}
@@ -148,6 +155,7 @@ func (d *Decoder) AddLayers(layers []gopacket.DecodingLayer) {
 }
 
 func (d *Decoder) OnPacket(data []byte, ci *gopacket.CaptureInfo) {
+
 	defer logp.Recover("packet decoding failed")
 
 	d.truncated = false
@@ -202,11 +210,38 @@ func (d *Decoder) OnPacket(data []byte, ci *gopacket.CaptureInfo) {
 	if d.flowID != nil {
 		debugf("flow id flags: %v", d.flowID.Flags())
 	}
-
 	if d.flowID != nil && d.flowID.Flags() != 0 {
+		// fmt.Println(d.flowID)
 		flow := d.flows.Get(d.flowID)
+		// fmt.Println(flow)
 		d.statPackets.Add(flow, 1)
 		d.statBytes.Add(flow, uint64(ci.Length))
+		// TODO: Try and refactor below
+
+		// uodate tcpOptions map
+		var tsval uint32
+		var tsecr uint32
+		for _, options := range d.tcp.Options {
+
+			if options.OptionType == 8 {
+				tsval = binary.BigEndian.Uint32(options.OptionData[:4])
+				tsecr = binary.BigEndian.Uint32(options.OptionData[4:8])
+
+				if tsecr > 0 {
+					// TCPOpt map updates here
+					d.flows.AddTCPOpt(d.flowID, tsval, tsecr)
+					if val, exists := flow.TCPOpt[tsecr]; exists {
+						rtt := tsval - val
+						// update rtt
+						d.statRtt.Add(flow, uint64(rtt))
+
+					}
+
+				}
+
+			}
+
+		}
 	}
 }
 
@@ -332,4 +367,5 @@ func (d *Decoder) onTCP(packet *protos.Packet) {
 	}
 	packet.Tuple.ComputeHashables()
 	d.tcpProc.Process(id, &d.tcp, packet)
+
 }

@@ -18,6 +18,7 @@
 package flows
 
 import (
+	"fmt"
 	"time"
 
 	"github.com/elastic/beats/libbeat/beat"
@@ -42,6 +43,7 @@ const (
 )
 
 func NewFlows(pub Reporter, config *config.Flows) (*Flows, error) {
+	fmt.Println("In new flows")
 	duration := func(s string, d time.Duration) (time.Duration, error) {
 		if s == "" {
 			return d, nil
@@ -67,11 +69,14 @@ func NewFlows(pub Reporter, config *config.Flows) (*Flows, error) {
 
 	counter := &counterReg{}
 
+	// below returns a struct Worker, which has run func(), which is bassically a periodic function which runs after a
+	// period and creates new events from the flowMetaTables
 	worker, err := newFlowsWorker(pub, table, counter, timeout, period)
 	if err != nil {
 		logp.Err("failed to configure flows processing intervals: %v", err)
 		return nil, err
 	}
+	// fmt.Println("flow table", table)
 
 	return &Flows{
 		table:      table,
@@ -92,11 +97,40 @@ func (f *Flows) Unlock() {
 
 func (f *Flows) Get(id *FlowID) *Flow {
 	debugf("get flow")
+	// fmt.Println(id.flow.stats)
 	if id.flow.stats == nil {
+		// fmt.Println("In flow.stats")
 		debugf("lookup flow: %v => %v", id.flowIDMeta, id.flowID)
 		id.flow = f.table.get(id, f.counterReg)
 	}
 	return &id.flow
+}
+
+func (f *Flows) AddTCPOpt(id *FlowID, tsval uint32, tsecr uint32) {
+
+	t := f.table.table[id.flowIDMeta]
+	t.mutex.Lock()
+	defer t.mutex.Unlock()
+
+	bf := t.table[string(id.flowID)]
+	bf.tcpopt[tsval] = tsecr
+	return
+}
+
+func (f *Flows) DelTCPOpt(id *FlowID, tsecr uint32) {
+
+	t := f.table.table[id.flowIDMeta]
+	t.mutex.Lock()
+	defer t.mutex.Unlock()
+
+	bf := t.table[string(id.flowID)]
+	//fmt.Println("stats", bf.stats)
+
+	delete(bf.tcpopt, tsecr)
+	// fmt.Println()
+	// fmt.Println("In DelOpt", bf.tcpopt)
+
+	return
 }
 
 func (f *Flows) Start() {

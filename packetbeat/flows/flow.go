@@ -30,11 +30,14 @@ type biFlow struct {
 
 	dir        flowDirection
 	stats      [2]*flowStats
+	tcpopt     TCPOptions
 	prev, next *biFlow
 }
 
+type TCPOptions map[uint32]uint32
 type Flow struct {
-	stats *flowStats
+	TCPOpt TCPOptions
+	stats  *flowStats
 }
 
 func newBiFlow(id rawFlowID, ts time.Time, dir flowDirection) *biFlow {

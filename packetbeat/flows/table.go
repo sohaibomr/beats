@@ -94,11 +94,17 @@ func (t *flowTable) get(id *FlowID, counter *counterReg) Flow {
 
 	bf.ts = ts
 	stats := bf.stats[dir]
+	opts := bf.tcpopt
 	if stats == nil {
+		// fmt.Println("In table.stats == nil")
 		stats = newFlowStats(counter)
 		bf.stats[dir] = stats
+		bf.tcpopt = make(map[uint32]uint32)
 	}
-	return Flow{stats}
+	// ye hum ne kiya hai
+	var flow = Flow{stats: stats, TCPOpt: opts}
+
+	return flow
 }
 
 func (t *flowTable) remove(f *biFlow) {

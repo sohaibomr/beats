@@ -21,6 +21,7 @@ import (
 	"encoding/base64"
 	"encoding/binary"
 	"errors"
+	"fmt"
 	"net"
 	"time"
 
@@ -49,6 +50,8 @@ func newFlowsWorker(
 	timeout, period time.Duration,
 ) (*worker, error) {
 	oneSecond := 1 * time.Second
+	fmt.Println("In newflows worker")
+	fmt.Println(table)
 
 	if timeout < oneSecond {
 		return nil, ErrInvalidTimeout
@@ -87,6 +90,7 @@ func newFlowsWorker(
 		counters: counters,
 		timeout:  timeout,
 	}
+	//initializes publisher and slice of events with given batchsize to dumpin ES
 	processor.spool.init(pub, defaultBatchSize)
 
 	return makeWorker(processor, tickDuration, ticksTimeout, ticksPeriod, 10)
@@ -141,6 +145,8 @@ func (fw *flowsProcessor) execute(w *worker, checkTimeout, handleReports, lastRe
 	}
 
 	debugf("exec tick, timeout=%v, report=%v", checkTimeout, handleReports)
+	// fmt.Println("In FP execute")
+	// fmt.Println(fw.table)
 
 	// get counter names snapshot if reports must be generated
 	fw.counters.mutex.Lock()
