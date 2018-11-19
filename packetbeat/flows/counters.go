@@ -87,6 +87,7 @@ func (c *Uint) Add(f *Flow, delta uint64) {
 		uints[c.i] += delta
 		c.f.apply(f.stats.uintFlags)
 	}
+
 }
 
 func (c *Uint) Set(f *Flow, value uint64) {
@@ -103,6 +104,7 @@ func (c *Float) Add(f *Flow, delta float64) {
 		floats[c.i] += delta
 		c.f.apply(f.stats.floatFlags)
 	}
+
 }
 
 func (c *Float) Set(f *Flow, value float64) {

@@ -27,7 +27,6 @@ import (
 	"github.com/elastic/beats/packetbeat/protos/icmp"
 	"github.com/elastic/beats/packetbeat/protos/tcp"
 	"github.com/elastic/beats/packetbeat/protos/udp"
-
 	"github.com/tsg/gopacket"
 	"github.com/tsg/gopacket/layers"
 )
@@ -58,10 +57,11 @@ type Decoder struct {
 	tcpProc   tcp.Processor
 	udpProc   udp.Processor
 
-	flows       *flows.Flows
-	statPackets *flows.Uint
-	statBytes   *flows.Uint
-	statRtt     *flows.Uint
+	flows        *flows.Flows
+	statPackets  *flows.Uint
+	statBytes    *flows.Uint
+	statRtt      *flows.Uint
+	statNlatency *flows.Uint
 
 	// hold current flow ID
 	flowID              *flows.FlowID // buffer flowID among many calls
@@ -69,9 +69,10 @@ type Decoder struct {
 }
 
 const (
-	netPacketsTotalCounter = "net_packets_total"
-	netBytesTotalCounter   = "net_bytes_total"
-	netRttTotalCounter     = "net_rtt_total"
+	netPacketsTotalCounter  = "net_packets_total"
+	netBytesTotalCounter    = "net_bytes_total"
+	netRttTotalCounter      = "net_rtt_total"
+	netNlatencyTotalCounter = "net_nl_total"
 )
 
 // New creates and initializes a new packet decoder.
@@ -102,6 +103,10 @@ func New(
 			return nil, err
 		}
 		d.statRtt, err = f.NewUint(netRttTotalCounter)
+		if err != nil {
+			return nil, err
+		}
+		d.statNlatency, err = f.NewUint(netNlatencyTotalCounter)
 		if err != nil {
 			return nil, err
 		}
@@ -221,6 +226,8 @@ func (d *Decoder) OnPacket(data []byte, ci *gopacket.CaptureInfo) {
 		// uodate tcpOptions map
 		var tsval uint32
 		var tsecr uint32
+		var rtt uint32
+
 		for _, options := range d.tcp.Options {
 
 			if options.OptionType == 8 {
@@ -231,7 +238,7 @@ func (d *Decoder) OnPacket(data []byte, ci *gopacket.CaptureInfo) {
 					// TCPOpt map updates here
 					d.flows.AddTCPOpt(d.flowID, tsval, tsecr)
 					if val, exists := flow.TCPOpt[tsecr]; exists {
-						rtt := tsval - val
+						rtt = tsval - val
 						// update rtt
 						d.statRtt.Add(flow, uint64(rtt))
 
@@ -241,6 +248,13 @@ func (d *Decoder) OnPacket(data []byte, ci *gopacket.CaptureInfo) {
 
 			}
 
+		}
+		if d.flows.GetSYN(d.flowID) >= 2 {
+			d.statNlatency.Add(flow, uint64(rtt))
+			d.flows.RemoveSYN(d.flowID)
+		}
+		if d.tcp.SYN {
+			d.flows.AddSYN(d.flowID)
 		}
 	}
 }

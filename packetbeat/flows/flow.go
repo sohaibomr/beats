@@ -30,6 +30,7 @@ type biFlow struct {
 
 	dir        flowDirection
 	stats      [2]*flowStats
+	SYN        int
 	tcpopt     TCPOptions
 	prev, next *biFlow
 }

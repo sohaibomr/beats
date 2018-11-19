@@ -106,6 +106,29 @@ func (f *Flows) Get(id *FlowID) *Flow {
 	return &id.flow
 }
 
+func (f *Flows) GetSYN(id *FlowID) int {
+	t := f.table.table[id.flowIDMeta]
+	bf := t.table[string(id.flowID)]
+	return bf.SYN
+}
+
+func (f *Flows) AddSYN(id *FlowID) {
+	t := f.table.table[id.flowIDMeta]
+	t.mutex.Lock()
+	defer t.mutex.Unlock()
+	bf := t.table[string(id.flowID)]
+	bf.SYN = bf.SYN + 1
+	return
+}
+func (f *Flows) RemoveSYN(id *FlowID) {
+	t := f.table.table[id.flowIDMeta]
+	t.mutex.Lock()
+	defer t.mutex.Unlock()
+	bf := t.table[string(id.flowID)]
+	bf.SYN = 0
+	return
+}
+
 func (f *Flows) AddTCPOpt(id *FlowID, tsval uint32, tsecr uint32) {
 
 	t := f.table.table[id.flowIDMeta]
