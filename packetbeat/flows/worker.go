@@ -309,12 +309,15 @@ func createEvent(
 	if id := f.id.ConnectionID(); id != nil {
 		fields["connection_id"] = base64.StdEncoding.EncodeToString(id)
 	}
-
 	if f.stats[0] != nil {
 		source["stats"] = encodeStats(f.stats[0], intNames, uintNames, floatNames)
+		f.stats[0].uints[2] = 0
+		f.stats[0].uints[3] = 0
 	}
 	if f.stats[1] != nil {
 		dest["stats"] = encodeStats(f.stats[1], intNames, uintNames, floatNames)
+		f.stats[1].uints[2] = 0
+		f.stats[1].uints[3] = 0
 	}
 
 	fields["source"] = source
@@ -337,7 +340,7 @@ func createEvent(
 			}
 		}
 	}
-
+	fmt.Println(fields)
 	return beat.Event{
 		Timestamp: timestamp,
 		Fields:    fields,

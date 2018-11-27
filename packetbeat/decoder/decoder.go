@@ -57,9 +57,12 @@ type Decoder struct {
 	tcpProc   tcp.Processor
 	udpProc   udp.Processor
 
-	flows        *flows.Flows
-	statPackets  *flows.Uint
-	statBytes    *flows.Uint
+	flows              *flows.Flows
+	statPackets        *flows.Uint
+	statBytes          *flows.Uint
+	statCurrentPackets *flows.Uint
+	statCurrentBytes   *flows.Uint
+
 	statRtt      *flows.Uint
 	statNlatency *flows.Uint
 
@@ -69,10 +72,12 @@ type Decoder struct {
 }
 
 const (
-	netPacketsTotalCounter  = "net_packets_total"
-	netBytesTotalCounter    = "net_bytes_total"
-	netRttTotalCounter      = "net_rtt_total"
-	netNlatencyTotalCounter = "net_nl_total"
+	netPacketsTotalCounter        = "net_packets_total"
+	netBytesTotalCounter          = "net_bytes_total"
+	netPacketsCurrentTotalCounter = "net_packets_current_total"
+	netBytesCurrentTotalCounter   = "net_bytes_current_total"
+	netRttTotalCounter            = "net_rtt_total"
+	netNlatencyTotalCounter       = "net_nl_total"
 )
 
 // New creates and initializes a new packet decoder.
@@ -99,6 +104,14 @@ func New(
 			return nil, err
 		}
 		d.statBytes, err = f.NewUint(netBytesTotalCounter)
+		if err != nil {
+			return nil, err
+		}
+		d.statCurrentPackets, err = f.NewUint(netPacketsCurrentTotalCounter)
+		if err != nil {
+			return nil, err
+		}
+		d.statCurrentBytes, err = f.NewUint(netBytesCurrentTotalCounter)
 		if err != nil {
 			return nil, err
 		}
@@ -221,6 +234,8 @@ func (d *Decoder) OnPacket(data []byte, ci *gopacket.CaptureInfo) {
 		// fmt.Println(flow)
 		d.statPackets.Add(flow, 1)
 		d.statBytes.Add(flow, uint64(ci.Length))
+		d.statCurrentPackets.Add(flow, 1)
+		d.statCurrentBytes.Add(flow, uint64(ci.Length))
 		// TODO: Try and refactor below
 
 		// uodate tcpOptions map
