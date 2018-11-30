@@ -11,5 +11,4 @@ COPY configs /packetbeat/configs
 WORKDIR /packetbeat
 RUN ls
 
-# CMD ["./packetbeat","-e", "-E","output.elasticsearch.hosts=['http://${ES_SERVER}:9200']", "-E", "packetbeat.interfaces.device=${INTERFACE}", "-c", "configs/packetbeat.yml"]
 CMD ["./pbrunner"]
