@@ -244,7 +244,6 @@ func (d *Decoder) OnPacket(data []byte, ci *gopacket.CaptureInfo) {
 		var rtt uint32
 
 		for _, options := range d.tcp.Options {
-
 			if options.OptionType == 8 {
 				tsval = binary.BigEndian.Uint32(options.OptionData[:4])
 				tsecr = binary.BigEndian.Uint32(options.OptionData[4:8])

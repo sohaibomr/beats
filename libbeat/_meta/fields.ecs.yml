@@ -1047,8 +1047,8 @@
     
       type: group
       fields:
-        - name: href
-          type: text
+        - name: original
+          type: keyword
           description: >
             Full url. The field is stored as keyword.
     
@@ -1061,13 +1061,7 @@
     
             `href` is an analyzed field so the parsed information can be accessed
             through `href.analyzed` in queries.
-    
-          multi_fields:
-            - name: raw
-              type: keyword
-              description: >
-                The full URL. This is a non-analyzed field that is useful
-                for aggregations.
+
           example: https://elastic.co:443/search?q=elasticsearch#top
         - name: scheme
           type: keyword
@@ -1217,3 +1211,14 @@
           type: long
           description: >
             Minor version of the operating system.
+
+  # Temporary fix to get 7.0 dashboards working.
+  # This must go in the ecs.yml as otherwise tests don't work.
+    - name: beat.name
+      type: alias
+      path: agent.type
+
+    - name: beat.hostname
+      type: alias
+      path: agent.hostname
+

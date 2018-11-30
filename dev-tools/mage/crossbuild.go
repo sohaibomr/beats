@@ -168,7 +168,7 @@ func buildMage() error {
 		"GOOS":   "linux",
 		"GOARCH": "amd64",
 	}
-	return sh.RunWith(env, "mage", "-f", "-compile", filepath.Join("build", "mage-linux-amd64"))
+	return sh.RunWith(env, "mage", "-f", "-compile", createDir(filepath.Join("build", "mage-linux-amd64")))
 }
 
 func crossBuildImage(platform string) (string, error) {
@@ -247,7 +247,7 @@ func (b GolangCrossBuilder) Build() error {
 		)
 	}
 	if versionQualified {
-		args = append(args, "--env", "BEAT_VERSION_QUALIFIER="+versionQualifier)
+		args = append(args, "--env", "VERSION_QUALIFIER="+versionQualifier)
 	}
 	args = append(args,
 		"--rm",
