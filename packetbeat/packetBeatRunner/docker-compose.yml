@@ -1,0 +1,34 @@
+version: "2.1"
+services:
+  nvisible_packetbeat:
+    build: ./packetbeat
+    container_name: nvisible_pbrunner
+    environment:
+      - ES_SERVER=localhost
+      - INTERFACE=wlp0s20f3
+    ports: ["8080:8080"]
+    network_mode: host
+
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:6.4.2
+    container_name: elasticsearch
+    environment: ['http.host=0.0.0.0', 'transport.host=127.0.0.1', 'cluster.routing.allocation.disk.threshold_enabled=false']
+    ports: ['9200:9200', '9300:9300']
+    # volumes:
+    #   - $HOME/elasticsearch/data:/usr/share/elasticsearch/data
+    network_mode: host
+    healthcheck:
+      test: ["CMD-SHELL", "curl --silent --fail localhost:9200/_cluster/health || exit 1"]
+      interval: 1m
+      timeout: 30s
+      retries: 5
+
+    
+  # nvisible-api:
+  #   image: nvisibleemumba/nvisible-api:0.0.1
+  #   container_name: nvisible-api
+  #   ports: ['8000:8000']
+  #   depends_on:
+  #      elasticsearch:
+  #       condition: service_healthy
+  #   networks: ['stack']
