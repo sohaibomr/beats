@@ -3,9 +3,10 @@ package services
 import (
 	"fmt"
 	"log"
-	"nvisible/packetBeatRunner/models"
 	"os"
 	"os/exec"
+
+	"github.com/elastic/beats/packetbeat/packetBeatRunner/models"
 )
 
 const (

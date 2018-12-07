@@ -229,47 +229,13 @@ func (d *Decoder) OnPacket(data []byte, ci *gopacket.CaptureInfo) {
 		debugf("flow id flags: %v", d.flowID.Flags())
 	}
 	if d.flowID != nil && d.flowID.Flags() != 0 {
-		// fmt.Println(d.flowID)
 		flow := d.flows.Get(d.flowID)
-		// fmt.Println(flow)
+
 		d.statPackets.Add(flow, 1)
 		d.statBytes.Add(flow, uint64(ci.Length))
 		d.statCurrentPackets.Add(flow, 1)
 		d.statCurrentBytes.Add(flow, uint64(ci.Length))
-		// TODO: Try and refactor below
 
-		// uodate tcpOptions map
-		var tsval uint32
-		var tsecr uint32
-		var rtt uint32
-
-		for _, options := range d.tcp.Options {
-			if options.OptionType == 8 {
-				tsval = binary.BigEndian.Uint32(options.OptionData[:4])
-				tsecr = binary.BigEndian.Uint32(options.OptionData[4:8])
-
-				if tsecr > 0 {
-					// TCPOpt map updates here
-					d.flows.AddTCPOpt(d.flowID, tsval, tsecr)
-					if val, exists := flow.TCPOpt[tsecr]; exists {
-						rtt = tsval - val
-						// update rtt
-						d.statRtt.Add(flow, uint64(rtt))
-
-					}
-
-				}
-
-			}
-
-		}
-		if d.flows.GetSYN(d.flowID) >= 2 {
-			d.statNlatency.Add(flow, uint64(rtt))
-			d.flows.RemoveSYN(d.flowID)
-		}
-		if d.tcp.SYN {
-			d.flows.AddSYN(d.flowID)
-		}
 	}
 }
 
@@ -382,6 +348,38 @@ func (d *Decoder) onTCP(packet *protos.Packet) {
 	id := d.flowID
 	if id != nil {
 		id.AddTCP(src, dst)
+	}
+	// update tcpOptions map
+	var tsval uint32
+	var tsecr uint32
+	var rtt uint32
+	flow := d.flows.Get(d.flowID)
+	for _, options := range d.tcp.Options {
+
+		if options.OptionType == 8 {
+			tsval = binary.BigEndian.Uint32(options.OptionData[:4])
+			tsecr = binary.BigEndian.Uint32(options.OptionData[4:8])
+			fmt.Printf("%d,%d,", tsval, tsecr)
+
+			if tsecr > 0 {
+				// TCPOpt map updates here
+				d.flows.AddTCPOpt(d.flowID, tsval, tsecr)
+				if val, exists := flow.TCPOpt[tsecr]; exists {
+					rtt = tsval - val
+					fmt.Printf("%d\n", rtt)
+					// update rtt
+					d.statRtt.Add(flow, uint64(rtt))
+				}
+			}
+		}
+
+	}
+	if d.flows.GetSYN(d.flowID) >= 2 {
+		d.statNlatency.Add(flow, uint64(rtt))
+		d.flows.RemoveSYN(d.flowID)
+	}
+	if d.tcp.SYN {
+		d.flows.AddSYN(d.flowID)
 	}
 
 	packet.Tuple.SrcPort = src

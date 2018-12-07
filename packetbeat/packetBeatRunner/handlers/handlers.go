@@ -2,9 +2,9 @@ package handlers
 
 import (
 	"fmt"
-	servicePB "nvisible/packetBeatRunner/services"
-	"nvisible/packetBeatRunner/utils"
 
+	servicePB "github.com/elastic/beats/packetbeat/packetBeatRunner/services"
+	"github.com/elastic/beats/packetbeat/packetBeatRunner/utils"
 	"github.com/gin-gonic/gin"
 	"github.com/parnurzeal/gorequest"
 )

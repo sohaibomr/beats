@@ -1,7 +1,7 @@
 package main
 
 import "github.com/gin-gonic/gin"
-import "nvisible/packetBeatRunner/handlers"
+import "github.com/elastic/beats/packetbeat/packetBeatRunner/handlers"
 
 func main() {
 	router := gin.Default()
