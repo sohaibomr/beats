@@ -1,15 +1,17 @@
 package main
 
-import "github.com/gin-gonic/gin"
-import "github.com/elastic/beats/packetbeat/packetBeatRunner/handlers"
+import (
+	"fmt"
+	"os"
+
+	"github.com/elastic/beats/packetbeat/packetBeatRunner/handlers"
+	"github.com/gin-gonic/gin"
+)
 
 func main() {
+
 	router := gin.Default()
 	pb := &handlers.PbDuration{StartTime: 0, StopTime: 0, Running: false}
-
-	router.GET("/hello", func(c *gin.Context) {
-		c.JSON(200, gin.H{"hello": "World"})
-	})
 
 	router.GET("/start-packetbeat", pb.PacketbeatStart)
 	// swagger:operation GET /start-packetbeat Packetbeat pb
@@ -33,5 +35,6 @@ func main() {
 	//    schema:
 	//     "$ref": "#/definitions/resPBStatus"
 
-	router.Run()
+	port := fmt.Sprintf(":%s", os.Getenv("PBRUNNER_PORT"))
+	router.Run(port)
 }

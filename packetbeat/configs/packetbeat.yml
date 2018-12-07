@@ -8,7 +8,7 @@
 #============================== Network device ================================
 # Select the network interface to sniff the data. On Linux, you can use the
 # "any" keyword to sniff on all connected interfaces.
-packetbeat.interfaces.device: any
+packetbeat.interfaces.device: ${INTERFACE}
 packetbeat.interfaces.type: af_packet
 packetbeat.interfaces.buffer_size_mb: 100
 #================================== Flows =====================================
@@ -126,7 +126,7 @@ setup.kibana:
 #-------------------------- Elasticsearch output ------------------------------
 output.elasticsearch:
   # Array of hosts to connect to.
-  hosts: ["localhost:9200"]
+  hosts: ["${ES_SERVER}:${ES_PORT}"]
   pipeline: geoip-info
   # Optional protocol and basic auth credentials.
   #protocol: "https"
