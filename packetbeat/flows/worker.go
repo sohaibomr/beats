@@ -340,7 +340,6 @@ func createEvent(
 			}
 		}
 	}
-	fmt.Println(fields)
 	return beat.Event{
 		Timestamp: timestamp,
 		Fields:    fields,

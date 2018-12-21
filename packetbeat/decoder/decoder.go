@@ -359,14 +359,14 @@ func (d *Decoder) onTCP(packet *protos.Packet) {
 		if options.OptionType == 8 {
 			tsval = binary.BigEndian.Uint32(options.OptionData[:4])
 			tsecr = binary.BigEndian.Uint32(options.OptionData[4:8])
-			fmt.Printf("%d,%d,", tsval, tsecr)
+			// fmt.Printf("%d,%d,", tsval, tsecr)
 
 			if tsecr > 0 {
 				// TCPOpt map updates here
 				d.flows.AddTCPOpt(d.flowID, tsval, tsecr)
 				if val, exists := flow.TCPOpt[tsecr]; exists {
 					rtt = tsval - val
-					fmt.Printf("%d\n", rtt)
+					// fmt.Printf("%d\n", rtt)
 					// update rtt
 					d.statRtt.Add(flow, uint64(rtt))
 				}

@@ -19,6 +19,7 @@ package tls
 
 import (
 	"crypto/x509"
+	"strings"
 	"time"
 
 	"github.com/elastic/beats/libbeat/beat"
@@ -386,7 +387,12 @@ func (plugin *tlsPlugin) createEvent(conn *tlsConnectionData) beat.Event {
 	// set "server" to SNI, if provided
 	if value, ok := clientHello.extensions.Parsed["server_name_indication"]; ok {
 		if list, ok := value.([]string); ok && len(list) > 0 {
-			fields["server"] = list[0]
+			// fields["server"] = list[0]
+			// reducing server name to last two words only,, for ex client.google.com will become google.com
+			temp := strings.Split(list[0], ".")
+			fields["server"] = strings.Join(temp[len(temp)-2:], ".")
+			// fmt.Println(fields["server"])
+			// fmt.Println(list)
 		}
 	}
 
