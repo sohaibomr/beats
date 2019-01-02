@@ -22,6 +22,11 @@ import (
 	"time"
 )
 
+type tlsVals struct {
+	serverName string
+	count      int
+}
+
 type biFlow struct {
 	id       rawFlowID
 	killed   uint32
@@ -32,13 +37,15 @@ type biFlow struct {
 	stats      [2]*flowStats
 	SYN        int
 	tcpopt     TCPOptions
+	serverName *tlsVals
 	prev, next *biFlow
 }
 
 type TCPOptions map[uint32]uint32
 type Flow struct {
-	TCPOpt TCPOptions
-	stats  *flowStats
+	TCPOpt     TCPOptions
+	stats      *flowStats
+	ServerName *tlsVals
 }
 
 func newBiFlow(id rawFlowID, ts time.Time, dir flowDirection) *biFlow {
@@ -56,4 +63,10 @@ func (f *biFlow) kill() {
 
 func (f *biFlow) isAlive() bool {
 	return atomic.LoadUint32(&f.killed) == 0
+}
+
+func (f *Flow) AddName(name string) {
+	f.ServerName.serverName = name
+	f.ServerName.count += 1
+	// fmt.Println("Adding server name in flow:", name)
 }

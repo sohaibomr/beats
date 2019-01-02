@@ -35,6 +35,7 @@ type HashableIPPortTuple [MaxIPPortTupleRawSize]byte
 type BaseTuple struct {
 	SrcIP, DstIP     net.IP
 	SrcPort, DstPort uint16
+	SrcMac, DstMac   string
 }
 
 type IPPortTuple struct {
@@ -47,7 +48,7 @@ type IPPortTuple struct {
 }
 
 func NewIPPortTuple(ipLength int, srcIP net.IP, srcPort uint16,
-	dstIP net.IP, dstPort uint16) IPPortTuple {
+	dstIP net.IP, dstPort uint16, srcMac string, dstMac string) IPPortTuple {
 
 	tuple := IPPortTuple{
 		IPLength: ipLength,
@@ -56,6 +57,8 @@ func NewIPPortTuple(ipLength int, srcIP net.IP, srcPort uint16,
 			DstIP:   dstIP,
 			SrcPort: srcPort,
 			DstPort: dstPort,
+			SrcMac:  srcMac,
+			DstMac:  dstMac,
 		},
 	}
 	tuple.ComputeHashables()
@@ -116,6 +119,8 @@ func TCPTupleFromIPPort(t *IPPortTuple, streamID uint32) TCPTuple {
 			DstIP:   t.DstIP,
 			SrcPort: t.SrcPort,
 			DstPort: t.DstPort,
+			SrcMac:  t.SrcMac,
+			DstMac:  t.DstMac,
 		},
 		StreamID: streamID,
 	}
@@ -145,7 +150,7 @@ func (t TCPTuple) String() string {
 // Returns a pointer to the equivalent IpPortTuple.
 func (t TCPTuple) IPPort() *IPPortTuple {
 	ipport := NewIPPortTuple(t.IPLength, t.SrcIP, t.SrcPort,
-		t.DstIP, t.DstPort)
+		t.DstIP, t.DstPort, t.SrcMac, t.DstMac)
 	return &ipport
 }
 

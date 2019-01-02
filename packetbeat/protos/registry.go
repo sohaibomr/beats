@@ -58,6 +58,10 @@ type TCPPlugin interface {
 	// ConnectionTimeout returns the per stream connection timeout.
 	// Return <=0 to set default tcp module transaction timeout.
 	ConnectionTimeout() time.Duration
+	// Below functions are added to this interface to export some of the tls plugin fields in tcp
+	HelloWorld(host string)
+	GetHost() string
+	DelHost()
 }
 
 type UDPPlugin interface {

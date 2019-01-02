@@ -19,6 +19,7 @@ package tls
 
 import (
 	"crypto/x509"
+	"fmt"
 	"strings"
 	"time"
 
@@ -56,6 +57,7 @@ type tlsPlugin struct {
 	fingerprints           []*FingerprintAlgorithm
 	transactionTimeout     time.Duration
 	results                protos.Reporter
+	Host                   string
 }
 
 var (
@@ -141,6 +143,18 @@ func (plugin *tlsPlugin) Parse(
 		return nil
 	}
 	return conn
+}
+
+func (plugin *tlsPlugin) HelloWorld(host string) {
+	plugin.Host = host
+}
+
+func (plugin *tlsPlugin) GetHost() string {
+	return plugin.Host
+}
+
+func (plugin *tlsPlugin) DelHost() {
+	plugin.Host = ""
 }
 
 func ensureTLSConnection(private protos.ProtocolData) *tlsConnectionData {
@@ -388,10 +402,11 @@ func (plugin *tlsPlugin) createEvent(conn *tlsConnectionData) beat.Event {
 	if value, ok := clientHello.extensions.Parsed["server_name_indication"]; ok {
 		if list, ok := value.([]string); ok && len(list) > 0 {
 			// fields["server"] = list[0]
-			// reducing server name to last two words only,, for ex client.google.com will become google.com
+			// reducing server name to last two words only, for ex client.google.com will become google.com
 			temp := strings.Split(list[0], ".")
 			fields["server"] = strings.Join(temp[len(temp)-2:], ".")
-			// fmt.Println(fields["server"])
+			plugin.HelloWorld(list[0])
+			// fmt.Println("Server name from tls", fields["server"])
 			// fmt.Println(list)
 		}
 	}
@@ -401,8 +416,11 @@ func (plugin *tlsPlugin) createEvent(conn *tlsConnectionData) beat.Event {
 	if responseTime >= 0 {
 		fields["responsetime"] = responseTime
 	}
-
+	// fmt.Println(fields)
 	timestamp := time.Now()
+	fmt.Println("Creating tls event:", timestamp)
+	fmt.Println("For Server name:", fields["server"])
+	fmt.Println("********************************************")
 	return beat.Event{
 		Timestamp: timestamp,
 		Fields:    fields,

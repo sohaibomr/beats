@@ -227,8 +227,12 @@ func createEvent(
 
 	// add ethernet layer meta data
 	if src, dst, ok := f.id.EthAddr(); ok {
-		source["mac"] = net.HardwareAddr(src).String()
-		dest["mac"] = net.HardwareAddr(dst).String()
+		srcMac := net.HardwareAddr(src).String()
+		dstMac := net.HardwareAddr(dst).String()
+		source["mac"] = srcMac
+		dest["mac"] = dstMac
+		tuple.SrcMac = srcMac
+		tuple.DstMac = dstMac
 	}
 
 	// add vlan
@@ -309,6 +313,7 @@ func createEvent(
 	if id := f.id.ConnectionID(); id != nil {
 		fields["connection_id"] = base64.StdEncoding.EncodeToString(id)
 	}
+	// here we reset packet and bytes count for current_stats fields to send counts of only current window
 	if f.stats[0] != nil {
 		source["stats"] = encodeStats(f.stats[0], intNames, uintNames, floatNames)
 		f.stats[0].uints[2] = 0
@@ -339,6 +344,11 @@ func createEvent(
 				}
 			}
 		}
+	}
+	if f.serverName.serverName != "" {
+		fields["serverName"] = f.serverName.serverName
+		// fmt.Println("servername in bflow:", fields["serverName"])
+		// fmt.Println("ServerName count in biflow", f.serverName.count)
 	}
 	return beat.Event{
 		Timestamp: timestamp,

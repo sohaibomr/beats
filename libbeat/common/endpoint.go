@@ -21,6 +21,7 @@ package common
 type Endpoint struct {
 	IP      string
 	Port    uint16
+	Mac     string
 	Name    string
 	Cmdline string
 	Proc    string
@@ -32,12 +33,14 @@ func MakeEndpointPair(tuple BaseTuple, cmdlineTuple *CmdlineTuple) (src Endpoint
 	src = Endpoint{
 		IP:      tuple.SrcIP.String(),
 		Port:    tuple.SrcPort,
+		Mac:     tuple.SrcMac,
 		Proc:    string(cmdlineTuple.Src),
 		Cmdline: string(cmdlineTuple.SrcCommand),
 	}
 	dst = Endpoint{
 		IP:      tuple.DstIP.String(),
 		Port:    tuple.DstPort,
+		Mac:     tuple.DstMac,
 		Proc:    string(cmdlineTuple.Dst),
 		Cmdline: string(cmdlineTuple.DstCommand),
 	}

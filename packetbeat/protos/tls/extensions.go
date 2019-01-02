@@ -104,6 +104,7 @@ func ParseExtensions(buffer bufferView) Extensions {
 		result.InOrder = append(result.InOrder, ExtensionID(code))
 		label, parsed, saveRaw := parseExtension(code, extBuffer)
 		if parsed != nil {
+			// find here k sni kha aata hai
 			result.Parsed[label] = parsed
 		} else {
 			unknown = append(unknown, label)
@@ -132,7 +133,9 @@ func parseSni(buffer bufferView) interface{} {
 		return nil
 	}
 	var hosts []string
+	// fmt.Println("######################## In parse SNI ########################")
 	for pos, limit := 2, 2+int(listLength); pos+3 <= limit; {
+		// fmt.Println("In parse sni", buffer.buf.)
 		var nameType uint8
 		var nameLen uint16
 		var host string
@@ -146,6 +149,7 @@ func parseSni(buffer bufferView) interface{} {
 		}
 		pos += 3 + int(nameLen)
 	}
+	// fmt.Println("############################### Out of parse SNI ############################################")
 	return hosts
 }
 

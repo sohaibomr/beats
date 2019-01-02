@@ -84,6 +84,7 @@ func (t *flowTable) get(id *FlowID, counter *counterReg) Flow {
 	bf := t.table[string(id.flowID)]
 	if bf == nil || !bf.isAlive() {
 		debugf("create new flow")
+		// fmt.Println("creating new biflow:")
 
 		bf = newBiFlow(id.rawFlowID.clone(), ts, id.dir)
 		t.table[string(bf.id.flowID)] = bf
@@ -95,14 +96,16 @@ func (t *flowTable) get(id *FlowID, counter *counterReg) Flow {
 	bf.ts = ts
 	stats := bf.stats[dir]
 	opts := bf.tcpopt
+	serverName := bf.serverName
 	if stats == nil {
 		// fmt.Println("In table.stats == nil")
 		stats = newFlowStats(counter)
 		bf.stats[dir] = stats
 		bf.tcpopt = make(map[uint32]uint32)
+		bf.serverName = &tlsVals{}
 	}
 	// ye hum ne kiya hai
-	var flow = Flow{stats: stats, TCPOpt: opts}
+	var flow = Flow{stats: stats, TCPOpt: opts, ServerName: serverName}
 
 	return flow
 }

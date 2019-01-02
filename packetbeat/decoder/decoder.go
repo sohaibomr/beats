@@ -54,7 +54,7 @@ type Decoder struct {
 
 	icmp4Proc icmp.ICMPv4Processor
 	icmp6Proc icmp.ICMPv6Processor
-	tcpProc   tcp.Processor
+	tcpProc   *tcp.TCP
 	udpProc   udp.Processor
 
 	flows              *flows.Flows
@@ -82,11 +82,11 @@ const (
 
 // New creates and initializes a new packet decoder.
 func New(
-	f *flows.Flows,
+	f *flows.Flows, //flow mw daal do server name or phir access kr lena
 	datalink layers.LinkType,
 	icmp4 icmp.ICMPv4Processor,
 	icmp6 icmp.ICMPv6Processor,
-	tcp tcp.Processor,
+	tcp *tcp.TCP,
 	udp udp.Processor,
 ) (*Decoder, error) {
 	d := Decoder{
@@ -347,12 +347,15 @@ func (d *Decoder) onTCP(packet *protos.Packet) {
 
 	id := d.flowID
 	if id != nil {
+		// fmt.Println("Flow ID is not nill:")
 		id.AddTCP(src, dst)
 	}
+
 	// update tcpOptions map
 	var tsval uint32
 	var tsecr uint32
 	var rtt uint32
+	// everytime its called it creates a new flow if id is nil
 	flow := d.flows.Get(d.flowID)
 	for _, options := range d.tcp.Options {
 
@@ -384,6 +387,8 @@ func (d *Decoder) onTCP(packet *protos.Packet) {
 
 	packet.Tuple.SrcPort = src
 	packet.Tuple.DstPort = dst
+	packet.Tuple.SrcMac = d.eth.SrcMAC.String()
+	packet.Tuple.DstMac = d.eth.DstMAC.String()
 	packet.Payload = d.tcp.Payload
 
 	if id == nil && len(packet.Payload) == 0 && !d.tcp.FIN {
@@ -392,6 +397,16 @@ func (d *Decoder) onTCP(packet *protos.Packet) {
 		return
 	}
 	packet.Tuple.ComputeHashables()
-	d.tcpProc.Process(id, &d.tcp, packet)
 
+	d.tcpProc.Process(id, &d.tcp, packet)
+	if id != nil {
+		if d.tcpProc.Host != "" {
+			// fmt.Println("server name from decoder", d.tcpProc.Host)
+			// flow.ServerName = append(flow.ServerName, d.tcpProc.Host)
+			// fmt.Println(flow.ServerName)
+			// d.flows.AddServerName(d.flowID, d.tcpProc.Host)
+			flow.AddName(d.tcpProc.Host)
+			// fmt.Println("************************************************** \n")
+		}
+	}
 }

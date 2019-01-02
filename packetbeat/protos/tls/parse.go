@@ -216,8 +216,8 @@ func (hello helloMessage) toMap() common.MapStr {
 
 func (parser *parser) parse(buf *streambuf.Buffer) parserResult {
 
+	// fmt.Println("########## In tls parser")
 	for buf.Avail(recordHeaderSize) {
-
 		header, err := readRecordHeader(buf)
 		if err != nil || !header.isValid() {
 			if err != nil {
@@ -225,7 +225,6 @@ func (parser *parser) parse(buf *streambuf.Buffer) parserResult {
 			}
 			return resultFailed
 		}
-
 		limit := recordHeaderSize + int(header.length)
 		if !buf.Avail(limit) {
 			// wait for complete record
@@ -242,6 +241,7 @@ func (parser *parser) parse(buf *streambuf.Buffer) parserResult {
 			return resultEncrypted
 
 		case recordTypeHandshake:
+			// fmt.Println(header)
 			if isDebug {
 				debugf("got handshake record of size %d", header.length)
 			}
@@ -455,6 +455,7 @@ func parseClientHello(buffer bufferView) *helloMessage {
 	}
 
 	result.parseExtensions(buffer.subview(limit, buffer.limit-limit))
+	// fmt.Println("client hosts", result.extensions.Parsed["server_name_indication"])
 	return &result
 }
 
@@ -474,6 +475,7 @@ func parseServerHello(buffer bufferView) *helloMessage {
 	result.selected.cipherSuite = cipherSuite(cipher)
 	result.selected.compression = compressionMethod(compression)
 	result.parseExtensions(buffer.subview(pos+3, buffer.limit-pos-3))
+	// fmt.Println("server hosts", result.extensions.Parsed["server_name_indication"])
 	return &result
 }
 

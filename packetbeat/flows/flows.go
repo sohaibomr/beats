@@ -106,6 +106,7 @@ func (f *Flows) Get(id *FlowID) *Flow {
 	return &id.flow
 }
 
+// for calculating rtt by T.S
 func (f *Flows) GetSYN(id *FlowID) int {
 	t := f.table.table[id.flowIDMeta]
 	bf := t.table[string(id.flowID)]
@@ -154,6 +155,21 @@ func (f *Flows) DelTCPOpt(id *FlowID, tsecr uint32) {
 	// fmt.Println("In DelOpt", bf.tcpopt)
 
 	return
+}
+
+// ends
+
+// to add server name in biflow
+func (f *Flows) AddServerName(id *FlowID, name string) {
+	// fmt.Println("In ad server name")
+	// t := f.table.table[id.flowIDMeta]
+	// t.mutex.Lock()
+	// defer t.mutex.Unlock()
+
+	// bf := t.table[string(id.flowID)]
+	// fmt.Println("Server name before adding in biflow", name)
+	// bf.serverName = name
+	fmt.Println(string(id.flowID))
 }
 
 func (f *Flows) Start() {
