@@ -19,7 +19,6 @@ package tls
 
 import (
 	"crypto/x509"
-	"fmt"
 	"strings"
 	"time"
 
@@ -58,6 +57,7 @@ type tlsPlugin struct {
 	transactionTimeout     time.Duration
 	results                protos.Reporter
 	Host                   string
+	tlsMap                 common.MapStr
 }
 
 var (
@@ -67,6 +67,37 @@ var (
 	// ensure that tlsPlugin fulfills the TCPPlugin interface
 	_ protos.TCPPlugin = &tlsPlugin{}
 )
+
+// interface functions to export tls map to flow
+func (plugin *tlsPlugin) HelloWorld(host string) {
+	plugin.Host = host
+}
+
+func (plugin *tlsPlugin) GetHost() string {
+	return plugin.Host
+}
+
+func (plugin *tlsPlugin) DelHost() {
+	plugin.Host = ""
+}
+
+func (plugin *tlsPlugin) InitMap() {
+	plugin.tlsMap = make(map[string]interface{})
+}
+
+func (plugin *tlsPlugin) SetMap(protoMap common.MapStr) {
+	// sets tls map vals to new map to export in flow event in flows/worker.go
+	for k, v := range protoMap {
+		plugin.tlsMap[k] = v
+	}
+
+}
+
+func (plugin *tlsPlugin) GetMap() common.MapStr {
+	return plugin.tlsMap
+}
+
+//
 
 func init() {
 	protos.Register("tls", New)
@@ -143,18 +174,6 @@ func (plugin *tlsPlugin) Parse(
 		return nil
 	}
 	return conn
-}
-
-func (plugin *tlsPlugin) HelloWorld(host string) {
-	plugin.Host = host
-}
-
-func (plugin *tlsPlugin) GetHost() string {
-	return plugin.Host
-}
-
-func (plugin *tlsPlugin) DelHost() {
-	plugin.Host = ""
 }
 
 func ensureTLSConnection(private protos.ProtocolData) *tlsConnectionData {
@@ -418,9 +437,10 @@ func (plugin *tlsPlugin) createEvent(conn *tlsConnectionData) beat.Event {
 	}
 	// fmt.Println(fields)
 	timestamp := time.Now()
-	fmt.Println("Creating tls event:", timestamp)
-	fmt.Println("For Server name:", fields["server"])
-	fmt.Println("********************************************")
+	// fmt.Println("Creating tls event:", timestamp)
+	// fmt.Println("For Server name:", fields["server"])
+	plugin.InitMap()
+	plugin.SetMap(fields)
 	return beat.Event{
 		Timestamp: timestamp,
 		Fields:    fields,

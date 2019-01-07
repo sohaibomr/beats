@@ -21,7 +21,6 @@ import (
 	"encoding/base64"
 	"encoding/binary"
 	"errors"
-	"fmt"
 	"net"
 	"time"
 
@@ -50,8 +49,8 @@ func newFlowsWorker(
 	timeout, period time.Duration,
 ) (*worker, error) {
 	oneSecond := 1 * time.Second
-	fmt.Println("In newflows worker")
-	fmt.Println(table)
+	// fmt.Println("In newflows worker")
+	// fmt.Println(table)
 
 	if timeout < oneSecond {
 		return nil, ErrInvalidTimeout
@@ -345,11 +344,14 @@ func createEvent(
 			}
 		}
 	}
-	if f.serverName.serverName != "" {
-		fields["serverName"] = f.serverName.serverName
-		// fmt.Println("servername in bflow:", fields["serverName"])
-		// fmt.Println("ServerName count in biflow", f.serverName.count)
+	// add tls fields in flow event
+	if f.tlsFields.fields != nil {
+		// fields["serverName"] = f.tlsFields.fields["server"]
+		for key, value := range f.tlsFields.fields {
+			fields[key] = value
+		}
 	}
+
 	return beat.Event{
 		Timestamp: timestamp,
 		Fields:    fields,

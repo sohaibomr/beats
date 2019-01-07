@@ -45,7 +45,8 @@ type TCP struct {
 	portMap      map[uint16]protos.Protocol
 	protocols    protos.Protocols
 	expiredConns expirationQueue
-	Host         string
+	// Host         string
+	TlsMap common.MapStr
 }
 
 type expiredConnection struct {
@@ -122,7 +123,8 @@ type TCPConnection struct {
 type TCPStream struct {
 	conn *TCPConnection
 	dir  uint8
-	Host string
+	// Host   string
+	tlsMap common.MapStr
 }
 
 func (conn *TCPConnection) String() string {
@@ -144,14 +146,22 @@ func (stream *TCPStream) addPacket(pkt *protos.Packet, tcphdr *layers.TCP) {
 
 	if len(pkt.Payload) > 0 {
 		conn.data = mod.Parse(pkt, &conn.tcptuple, stream.dir, conn.data)
-		st := mod.GetHost()
 		// if st == "" {
 		// 	fmt.Println("Nill host")
 		// } // can use this interface method to get server host names
-		if st != "" {
-			fmt.Println("server name in tcp", st)
-			stream.Host = st
-			mod.DelHost()
+		// if st != "" {
+		// 	fmt.Println("server name in tcp", st)
+		// 	stream.Host = st
+		// 	mod.DelHost()
+		// }
+
+		tlsMap := mod.GetMap()
+		if len(tlsMap) > 0 {
+			// fmt.Println("server name before clearing name", tlsMap["server"])
+			mod.InitMap()
+			stream.tlsMap = tlsMap
+			// fmt.Println("server name after clearing name", stream.tlsMap["server"])
+			// fmt.Println("#####################################################")
 		}
 	}
 
@@ -249,7 +259,9 @@ func (tcp *TCP) Process(id *flows.FlowID, tcphdr *layers.TCP, pkt *protos.Packet
 	conn.lastSeq[stream.dir] = tcpSeq
 	stream.addPacket(pkt, tcphdr)
 	// stream.conn try to get host names here
-	tcp.Host = stream.Host
+	if len(stream.tlsMap) > 0 {
+		tcp.TlsMap = stream.tlsMap
+	}
 }
 
 func (tcp *TCP) getStream(pkt *protos.Packet) (stream TCPStream, created bool) {

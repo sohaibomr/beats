@@ -96,16 +96,16 @@ func (t *flowTable) get(id *FlowID, counter *counterReg) Flow {
 	bf.ts = ts
 	stats := bf.stats[dir]
 	opts := bf.tcpopt
-	serverName := bf.serverName
+	tlsFields := bf.tlsFields
 	if stats == nil {
 		// fmt.Println("In table.stats == nil")
 		stats = newFlowStats(counter)
 		bf.stats[dir] = stats
 		bf.tcpopt = make(map[uint32]uint32)
-		bf.serverName = &tlsVals{}
+		bf.tlsFields = &tlsVals{}
 	}
 	// ye hum ne kiya hai
-	var flow = Flow{stats: stats, TCPOpt: opts, ServerName: serverName}
+	var flow = Flow{stats: stats, TCPOpt: opts, tlsFields: tlsFields}
 
 	return flow
 }

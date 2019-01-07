@@ -178,6 +178,7 @@ func (pb *packetbeat) setupFlows() error {
 	}
 	fmt.Println("Processors from PB.go", processors, err)
 
+	fmt.Println("Connecting flows pipeline###########################")
 	client, err := pb.pipeline.ConnectWith(beat.ClientConfig{
 		EventMetadata: config.Flows.EventMetadata,
 		Processor:     processors,

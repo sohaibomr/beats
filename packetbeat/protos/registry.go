@@ -62,6 +62,10 @@ type TCPPlugin interface {
 	HelloWorld(host string)
 	GetHost() string
 	DelHost()
+
+	SetMap(protoMap common.MapStr)
+	GetMap() common.MapStr
+	InitMap()
 }
 
 type UDPPlugin interface {

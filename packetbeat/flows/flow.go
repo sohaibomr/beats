@@ -20,11 +20,13 @@ package flows
 import (
 	"sync/atomic"
 	"time"
+
+	"github.com/elastic/beats/libbeat/common"
 )
 
 type tlsVals struct {
-	serverName string
-	count      int
+	fields common.MapStr
+	// count  int
 }
 
 type biFlow struct {
@@ -37,15 +39,15 @@ type biFlow struct {
 	stats      [2]*flowStats
 	SYN        int
 	tcpopt     TCPOptions
-	serverName *tlsVals
+	tlsFields  *tlsVals
 	prev, next *biFlow
 }
 
 type TCPOptions map[uint32]uint32
 type Flow struct {
-	TCPOpt     TCPOptions
-	stats      *flowStats
-	ServerName *tlsVals
+	TCPOpt    TCPOptions
+	stats     *flowStats
+	tlsFields *tlsVals
 }
 
 func newBiFlow(id rawFlowID, ts time.Time, dir flowDirection) *biFlow {
@@ -65,8 +67,14 @@ func (f *biFlow) isAlive() bool {
 	return atomic.LoadUint32(&f.killed) == 0
 }
 
-func (f *Flow) AddName(name string) {
-	f.ServerName.serverName = name
-	f.ServerName.count += 1
+func (f *Flow) AddName(name common.MapStr) {
+	f.tlsFields.fields = make(map[string]interface{})
+	for k, v := range name {
+		f.tlsFields.fields[k] = v
+	}
+	// f.ServerName.count += 1
+	// delete type field
+	delete(f.tlsFields.fields, "type")
+
 	// fmt.Println("Adding server name in flow:", name)
 }

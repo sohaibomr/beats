@@ -400,13 +400,12 @@ func (d *Decoder) onTCP(packet *protos.Packet) {
 
 	d.tcpProc.Process(id, &d.tcp, packet)
 	if id != nil {
-		if d.tcpProc.Host != "" {
-			// fmt.Println("server name from decoder", d.tcpProc.Host)
-			// flow.ServerName = append(flow.ServerName, d.tcpProc.Host)
-			// fmt.Println(flow.ServerName)
-			// d.flows.AddServerName(d.flowID, d.tcpProc.Host)
-			flow.AddName(d.tcpProc.Host)
+		// fmt.Println("************************************************** \n")
+		if len(d.tcpProc.TlsMap) > 0 {
+			// fmt.Println("Server name tlsMap decoder.go", d.tcpProc.TlsMap["server"])
 			// fmt.Println("************************************************** \n")
+			flow.AddName(d.tcpProc.TlsMap)
 		}
 	}
+
 }
