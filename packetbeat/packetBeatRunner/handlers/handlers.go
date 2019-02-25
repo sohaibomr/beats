@@ -46,7 +46,7 @@ func (pb *PbDuration) PacketbeatStop(c *gin.Context) {
 		pb.Running = false
 		pb.StopTime = utils.MakeTimestamp()
 		//send to elastic search here
-		// pb.SendToEs()
+		pb.SendToEs()
 		c.JSON(utils.StatusCodeOK, res)
 		return
 	}
@@ -59,7 +59,7 @@ func (pb *PbDuration) PacketbeatStop(c *gin.Context) {
 }
 
 func (pb *PbDuration) toESObj() string {
-	str := `{"start_time":%s, "stop_time":%s}`
+	str := `{"start_time":%d, "stop_time":%d}`
 	return fmt.Sprintf(str, pb.StartTime, pb.StopTime)
 
 }
@@ -70,8 +70,10 @@ func (pb *PbDuration) SendToEs() {
 	request := gorequest.New()
 	request.AppendHeader("Content-Type", "application/json")
 
-	status, _, _ := request.Post(insertString).Send(pb.toESObj()).End()
+	fmt.Println(pb.toESObj())
+	status, body, _ := request.Post(insertString).Send(pb.toESObj()).End()
 
-	fmt.Println(status.StatusCode)
+	fmt.Println("#### Sent start time to packetbeat", body)
+	fmt.Println(status)
 
 }
