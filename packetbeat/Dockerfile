@@ -8,8 +8,9 @@ RUN mkdir /packetbeat
 COPY packetbeat /packetbeat/
 COPY ./packetBeatRunner/pbrunner /packetbeat/
 COPY configs /packetbeat/configs
+COPY configs/entrypoint.sh /packetbeat/entrypoint.sh
 RUN chmod go-w /packetbeat/configs/packetbeat.yml
 WORKDIR /packetbeat
 RUN ls
 
-CMD ["./pbrunner"]
+CMD ["bash", "entrypoint.sh"]
