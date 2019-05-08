@@ -12,6 +12,7 @@ func main() {
 
 	router := gin.Default()
 	pb := &handlers.PbDuration{StartTime: 0, StopTime: 0, Running: false}
+	pb.PacketbeatInit()
 
 	router.GET("/start-packetbeat", pb.PacketbeatStart)
 	// swagger:operation GET /start-packetbeat Packetbeat pb
