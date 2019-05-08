@@ -9,7 +9,8 @@ COPY packetbeat /packetbeat/
 COPY ./packetBeatRunner/pbrunner /packetbeat/
 COPY configs /packetbeat/configs
 COPY configs/entrypoint.sh /packetbeat/entrypoint.sh
-RUN chmod go-w /packetbeat/configs/packetbeat.yml
+COPY configs/packetbeat.yml /packetbeat/packetbeat.yml
+RUN chmod go-w /packetbeat/packetbeat.yml
 WORKDIR /packetbeat
 RUN ls
 
