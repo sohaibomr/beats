@@ -18,6 +18,13 @@ type PbDuration struct {
 	Running   bool  `json:"status"`
 }
 
+func (pb *PbDuration) PacketbeatInit() {
+	_ = servicePB.StartPB()
+	pb.Running = true
+	pb.StartTime = utils.MakeTimestamp()
+	fmt.Println("Started packetbeat")
+}
+
 // PacketbeatStart starts the packcetbeat
 func (pb *PbDuration) PacketbeatStart(c *gin.Context) {
 
