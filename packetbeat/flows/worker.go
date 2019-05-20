@@ -330,6 +330,9 @@ func createEvent(
 	if f.stats[0] != nil {
 		// Source stats.
 		stats := encodeStats(f.stats[0], intNames, uintNames, floatNames)
+		// make packets and bytes counter zero,
+		f.stats[0].uints[2] = 0
+		f.stats[0].uints[3] = 0
 		for k, v := range stats {
 			switch k {
 			case "icmpV4TypeCode":
@@ -361,6 +364,9 @@ func createEvent(
 	if f.stats[1] != nil {
 		// Destination stats.
 		stats := encodeStats(f.stats[1], intNames, uintNames, floatNames)
+		// make packet and bytes counter zero
+		f.stats[1].uints[2] = 0
+		f.stats[1].uints[3] = 0
 		for k, v := range stats {
 			switch k {
 			case "icmpV4TypeCode", "icmpV6TypeCode":

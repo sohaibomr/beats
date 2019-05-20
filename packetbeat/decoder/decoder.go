@@ -57,11 +57,13 @@ type Decoder struct {
 	tcpProc   tcp.Processor
 	udpProc   udp.Processor
 
-	flows          *flows.Flows
-	statPackets    *flows.Uint
-	statBytes      *flows.Uint
-	icmpV4TypeCode *flows.Uint
-	icmpV6TypeCode *flows.Uint
+	flows              *flows.Flows
+	statPackets        *flows.Uint
+	statBytes          *flows.Uint
+	icmpV4TypeCode     *flows.Uint
+	icmpV6TypeCode     *flows.Uint
+	statCurrentPackets *flows.Uint
+	statCurrentBytes   *flows.Uint
 
 	// hold current flow ID
 	flowID              *flows.FlowID // buffer flowID among many calls
@@ -69,10 +71,12 @@ type Decoder struct {
 }
 
 const (
-	netPacketsTotalCounter = "packets"
-	netBytesTotalCounter   = "bytes"
-	icmpV4TypeCodeValue    = "icmpV4TypeCode"
-	icmpV6TypeCodeValue    = "icmpV6TypeCode"
+	netPacketsTotalCounter        = "packets"
+	netBytesTotalCounter          = "bytes"
+	netPacketsCurrentTotalCounter = "net_packets_current_total"
+	netBytesCurrentTotalCounter   = "net_bytes_current_total"
+	icmpV4TypeCodeValue           = "icmpV4TypeCode"
+	icmpV6TypeCodeValue           = "icmpV6TypeCode"
 )
 
 // New creates and initializes a new packet decoder.
@@ -99,6 +103,14 @@ func New(
 			return nil, err
 		}
 		d.statBytes, err = f.NewUint(netBytesTotalCounter)
+		if err != nil {
+			return nil, err
+		}
+		d.statCurrentPackets, err = f.NewUint(netPacketsCurrentTotalCounter)
+		if err != nil {
+			return nil, err
+		}
+		d.statCurrentBytes, err = f.NewUint(netBytesCurrentTotalCounter)
 		if err != nil {
 			return nil, err
 		}
@@ -220,6 +232,10 @@ func (d *Decoder) OnPacket(data []byte, ci *gopacket.CaptureInfo) {
 		flow := d.flows.Get(d.flowID)
 		d.statPackets.Add(flow, 1)
 		d.statBytes.Add(flow, uint64(ci.Length))
+
+		// to add current window stat fields
+		d.statCurrentPackets.Add(flow, 1)
+		d.statCurrentBytes.Add(flow, uint64(ci.Length))
 	}
 }
 
