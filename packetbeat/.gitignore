@@ -30,3 +30,7 @@ _testmain.go
 
 *.test
 
+configs/local_packetbeat.yml
+/configs/local_packetbeat.yml
+
+
