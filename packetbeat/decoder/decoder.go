@@ -18,6 +18,7 @@
 package decoder
 
 import (
+	"encoding/binary"
 	"fmt"
 
 	"github.com/elastic/beats/libbeat/logp"
@@ -57,13 +58,15 @@ type Decoder struct {
 	tcpProc   tcp.Processor
 	udpProc   udp.Processor
 
-	flows              *flows.Flows
-	statPackets        *flows.Uint
-	statBytes          *flows.Uint
-	icmpV4TypeCode     *flows.Uint
-	icmpV6TypeCode     *flows.Uint
+	flows          *flows.Flows
+	statPackets    *flows.Uint
+	statBytes      *flows.Uint
+	icmpV4TypeCode *flows.Uint
+	icmpV6TypeCode *flows.Uint
+	// nvisible additions
 	statCurrentPackets *flows.Uint
 	statCurrentBytes   *flows.Uint
+	statRtt            *flows.Uint
 
 	// hold current flow ID
 	flowID              *flows.FlowID // buffer flowID among many calls
@@ -71,12 +74,15 @@ type Decoder struct {
 }
 
 const (
-	netPacketsTotalCounter        = "packets"
-	netBytesTotalCounter          = "bytes"
+	netPacketsTotalCounter = "packets"
+	netBytesTotalCounter   = "bytes"
+
+	icmpV4TypeCodeValue = "icmpV4TypeCode"
+	icmpV6TypeCodeValue = "icmpV6TypeCode"
+	// nvisible additions
 	netPacketsCurrentTotalCounter = "net_packets_current_total"
 	netBytesCurrentTotalCounter   = "net_bytes_current_total"
-	icmpV4TypeCodeValue           = "icmpV4TypeCode"
-	icmpV6TypeCodeValue           = "icmpV6TypeCode"
+	netRttTotalCounter            = "net_rtt_total"
 )
 
 // New creates and initializes a new packet decoder.
@@ -111,6 +117,10 @@ func New(
 			return nil, err
 		}
 		d.statCurrentBytes, err = f.NewUint(netBytesCurrentTotalCounter)
+		if err != nil {
+			return nil, err
+		}
+		d.statRtt, err = f.NewUint(netRttTotalCounter)
 		if err != nil {
 			return nil, err
 		}
@@ -359,6 +369,39 @@ func (d *Decoder) onTCP(packet *protos.Packet) {
 	if id != nil {
 		id.AddTCP(src, dst)
 	}
+
+	// nvisible rtt addition
+	// update tcpOptions map
+	var tsval uint32
+	var tsecr uint32
+	var rtt uint32
+	flow := d.flows.Get(d.flowID)
+	for _, options := range d.tcp.Options {
+
+		if options.OptionType == 8 {
+			tsval = binary.BigEndian.Uint32(options.OptionData[:4])
+			tsecr = binary.BigEndian.Uint32(options.OptionData[4:8])
+
+			if tsecr > 0 {
+				// TCPOpt map updates here
+				d.flows.AddTCPOpt(d.flowID, tsval, tsecr)
+				if val, exists := flow.TCPOpt[tsecr]; exists {
+					rtt = tsval - val
+					// update rtt
+					d.statRtt.Add(flow, uint64(rtt))
+				}
+			}
+		}
+
+	}
+	if d.flows.GetSYN(d.flowID) >= 2 {
+		// d.statNlatency.Add(flow, uint64(rtt))
+		d.flows.RemoveSYN(d.flowID)
+	}
+	if d.tcp.SYN {
+		d.flows.AddSYN(d.flowID)
+	}
+	//
 
 	packet.Tuple.SrcPort = src
 	packet.Tuple.DstPort = dst

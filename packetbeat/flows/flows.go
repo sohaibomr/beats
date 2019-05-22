@@ -118,3 +118,54 @@ func (f *Flows) NewUint(name string) (*Uint, error) {
 func (f *Flows) NewFloat(name string) (*Float, error) {
 	return f.counterReg.newFloat(name)
 }
+
+// nvisible additions
+func (f *Flows) GetSYN(id *FlowID) int {
+	t := f.table.table[id.flowIDMeta]
+	bf := t.table[string(id.flowID)]
+	return bf.SYN
+}
+
+func (f *Flows) AddSYN(id *FlowID) {
+	t := f.table.table[id.flowIDMeta]
+	t.mutex.Lock()
+	defer t.mutex.Unlock()
+	bf := t.table[string(id.flowID)]
+	bf.SYN = bf.SYN + 1
+	return
+}
+func (f *Flows) RemoveSYN(id *FlowID) {
+	t := f.table.table[id.flowIDMeta]
+	t.mutex.Lock()
+	defer t.mutex.Unlock()
+	bf := t.table[string(id.flowID)]
+	bf.SYN = 0
+	return
+}
+
+func (f *Flows) AddTCPOpt(id *FlowID, tsval uint32, tsecr uint32) {
+
+	t := f.table.table[id.flowIDMeta]
+	t.mutex.Lock()
+	defer t.mutex.Unlock()
+
+	bf := t.table[string(id.flowID)]
+	bf.tcpopt[tsval] = tsecr
+	return
+}
+
+func (f *Flows) DelTCPOpt(id *FlowID, tsecr uint32) {
+
+	t := f.table.table[id.flowIDMeta]
+	t.mutex.Lock()
+	defer t.mutex.Unlock()
+
+	bf := t.table[string(id.flowID)]
+	//fmt.Println("stats", bf.stats)
+
+	delete(bf.tcpopt, tsecr)
+	// fmt.Println()
+	// fmt.Println("In DelOpt", bf.tcpopt)
+
+	return
+}
