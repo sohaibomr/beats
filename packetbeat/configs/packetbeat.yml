@@ -105,6 +105,27 @@ setup.template.pattern: "packetbeat-*"
 # versions, this URL points to the dashboard archive on the artifacts.elastic.co
 # website.
 #setup.dashboards.url:
+
+
+#============================== Setup ILM =====================================
+
+# Configure Index Lifecycle Management Index Lifecycle Management creates a
+# write alias and adds additional settings to the template.
+# The elasticsearch.output.index setting will be replaced with the write alias
+# if ILM is enabled.
+
+# Enabled ILM support. Valid values are true, false, and auto. The beat will
+# detect availabilty of Index Lifecycle Management in Elasticsearch and enable
+# or disable ILM support.
+setup.ilm.enabled: true
+# setup.ilm.overwrite: false
+
+# Configure the ILM write alias name.
+setup.ilm.rollover_alias: "packetbeat"
+
+# Configure rollover index pattern.
+setup.ilm.pattern: "{now/d}-000001"
+
 #============================== Kibana =====================================
 # Starting with Beats version 6.0.0, the dashboards are loaded via the Kibana API.
 # This requires a Kibana endpoint configuration.
@@ -129,7 +150,7 @@ setup.kibana:
 output.elasticsearch:
   # Array of hosts to connect to.
   hosts: ["${ES_SERVER}:${ES_PORT}"]
-  index: "packetbeat-%{[agent.version]}-%{+yyyy.MM.dd}"
+  index: "packetbeat-%{[agent.version]}-%{+yyyy.MM.dd}-00001"
   pipeline: geoip-info
   # Optional protocol and basic auth credentials.
   #protocol: "https"
