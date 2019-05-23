@@ -117,14 +117,14 @@ setup.template.pattern: "packetbeat-*"
 # Enabled ILM support. Valid values are true, false, and auto. The beat will
 # detect availabilty of Index Lifecycle Management in Elasticsearch and enable
 # or disable ILM support.
-setup.ilm.enabled: true
+setup.ilm.enabled: false
 # setup.ilm.overwrite: false
 
 # Configure the ILM write alias name.
-setup.ilm.rollover_alias: "packetbeat"
+# setup.ilm.rollover_alias: "packetbeat"
 
 # Configure rollover index pattern.
-setup.ilm.pattern: "{now/d}-000001"
+# setup.ilm.pattern: "{now/d}-000001"
 
 #============================== Kibana =====================================
 # Starting with Beats version 6.0.0, the dashboards are loaded via the Kibana API.
@@ -150,7 +150,7 @@ setup.kibana:
 output.elasticsearch:
   # Array of hosts to connect to.
   hosts: ["${ES_SERVER}:${ES_PORT}"]
-  index: "packetbeat-%{[agent.version]}-%{+yyyy.MM.dd}-00001"
+  index: "packetbeat-%{[agent.version]}-%{+yyyy.MM.dd}"
   pipeline: geoip-info
   # Optional protocol and basic auth credentials.
   #protocol: "https"
@@ -187,3 +187,59 @@ output.elasticsearch:
 # have the Elasticsearch output configured, you can simply uncomment the
 # following line.
 #xpack.monitoring.elasticsearch:
+
+#============================== Template =====================================
+
+# A template is used to set the mapping in Elasticsearch
+# By default template loading is enabled and the template is loaded.
+# These settings can be adjusted to load your own template or overwrite existing ones.
+
+# Set to false to disable template loading.
+#setup.template.enabled: true
+
+# Template name. By default the template name is "packetbeat-%{[agent.version]}"
+# The template name and pattern has to be set in case the Elasticsearch index pattern is modified.
+#setup.template.name: "packetbeat-%{[agent.version]}"
+
+# Template pattern. By default the template pattern is "-%{[agent.version]}-*" to apply to the default index settings.
+# The first part is the version of the beat and then -* is used to match all daily indices.
+# The template name and pattern has to be set in case the Elasticsearch index pattern is modified.
+#setup.template.pattern: "packetbeat-%{[agent.version]}-*"
+
+# Path to fields.yml file to generate the template
+#setup.template.fields: "${path.config}/fields.yml"
+
+# A list of fields to be added to the template and Kibana index pattern. Also
+# specify setup.template.overwrite: true to overwrite the existing template.
+# This setting is experimental.
+#setup.template.append_fields:
+#- name: field_name
+#  type: field_type
+
+# Enable JSON template loading. If this is enabled, the fields.yml is ignored.
+#setup.template.json.enabled: false
+
+# Path to the JSON template file
+#setup.template.json.path: "${path.config}/template.json"
+
+# Name under which the template is stored in Elasticsearch
+#setup.template.json.name: ""
+
+# Overwrite existing template
+setup.template.overwrite: true
+
+# Elasticsearch template settings
+setup.template.settings:
+
+  # A dictionary of settings to place into the settings.index dictionary
+  # of the Elasticsearch template. For more details, please check
+  # https://www.elastic.co/guide/en/elasticsearch/reference/current/mapping.html
+  #index:
+    #number_of_shards: 1
+    #codec: best_compression
+    #number_of_routing_shards: 30
+
+  # A dictionary of settings for the _source field. For more details, please check
+  # https://www.elastic.co/guide/en/elasticsearch/reference/current/mapping-source-field.html
+  #_source:
+    #enabled: false
